@@ -6,8 +6,8 @@ AurelsOpenAIClient is a simple .NET library for integrating OpenAI APIs into you
 
 ---
 ## Links
-[GitHub - AurelsOpenAIClient](https://github.com/aurel192/AurelsOpenAIClient)
-[Nuget Package - AurelsOpenAIClient](https://www.nuget.org/packages/AurelsOpenAIClient)
+- [GitHub - AurelsOpenAIClient](https://github.com/aurel192/AurelsOpenAIClient)
+- [Nuget Package - AurelsOpenAIClient](https://www.nuget.org/packages/AurelsOpenAIClient)
 ---
 
 ## Features
