@@ -5,6 +5,10 @@
 AurelsOpenAIClient is a simple .NET library for integrating OpenAI APIs into your applications. It supports various functionalities such as Chat Completion, Speech-to-Text, Text-to-Speech, and Translation. All you need is an OpenAI API key.
 
 ---
+## Links
+[GitHub - AurelsOpenAIClient](https://github.com/aurel192/AurelsOpenAIClient)
+[Nuget Package - AurelsOpenAIClient](https://www.nuget.org/packages/AurelsOpenAIClient)
+---
 
 ## Features
 
