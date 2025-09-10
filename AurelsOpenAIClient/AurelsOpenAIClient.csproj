@@ -1,0 +1,43 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <AssemblyVersion>1.0.9</AssemblyVersion>
+    <FileVersion>1.0.9</FileVersion>
+    <Version>1.0.9</Version>
+    <Title>AurelsOpenAIClient</Title>
+    <Authors>aurel192</Authors>
+    <Company>aurel192</Company>
+    <Description>AurelsOpenAIClient is a simple .NET library for integrating OpenAI APIs into your applications. It supports various functionalities such as Chat Completion, Speech-to-Text, Text-to-Speech, and Translation. All you need is an OpenAI API key.</Description>
+    <Copyright>Copyright © 2025 Aurel Kovacs</Copyright>
+    <PackageIcon>AurelsOpenAIClient.png</PackageIcon>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Chat\AdvancedTranslator.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+
+    <None Update="AurelsOpenAIClient.png">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
+
+    <None Update="README.md">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
+
+    <None Update="LICENSE.txt">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
+
+  </ItemGroup>
+  
+</Project>
