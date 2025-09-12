@@ -1,6 +1,6 @@
 # AurelsOpenAIClient
 
-**Version:** 1.0.9
+**Version:** 1.1.0
 
 AurelsOpenAIClient is a simple .NET library for integrating OpenAI APIs into your applications. It supports various functionalities such as Chat Completion, Speech-to-Text, Text-to-Speech, and Translation. All you need is an OpenAI API key.
 
@@ -11,8 +11,8 @@ AurelsOpenAIClient is a simple .NET library for integrating OpenAI APIs into you
 ---
 
 ## Features
-
-- **Chat Completion**: Interact with OpenAI's chat models like `gpt5`, `gpt-4o`, `gpt-3.5-turbo`, and more.
+- **Models**: List all the available models by OpenAI
+- **Chat Completion**: Interact with OpenAI's chat models like `gpt-5-chat-latest`, `gpt-4o`, `gpt-4o-mini`,`gpt-3.5-turbo`, and more.
 - **Speech-to-Text**: Convert audio files into text using OpenAI's `whisper-1` model.
 - **Text-to-Speech**: Generate speech from text with customizable voice and speed.
 - **Translation**: Translate audio files into English using OpenAI's `whisper-1` model.
@@ -29,12 +29,18 @@ AurelsOpenAIClient is a simple .NET library for integrating OpenAI APIs into you
 
 Add the AurelsOpenAIClient library to your project using CLI or via NuGet Package Manager.
 ```
-dotnet add package AurelsOpenAIClient --version 1.0.9
+dotnet add package AurelsOpenAIClient --version 1.1.0
 ```
 Ensure you have a valid OpenAI API key to use the services!
 You can top up your OpenAI credit with as little as 5 USD
 [OpenAI Billing](https://platform.openai.com/settings/organization/billing/overview)
 
+---
+## Models
+```csharp
+var models = new Models("YOUR-OPENAI-API-KEY");
+string availableModels = await models.GetModels();
+```
 ---
 
 ## Chat Completion
@@ -65,8 +71,8 @@ string response = await chatClient.SendChatAdvanced(chatCompletetionParameters: 
 // All the important parameters can be modified:
 
 chatClient.SetEndpoint("https://api.openai.com/v1/chat/completions");
-chatClient.SetModel("gpt-5-nano");
-chatClient.SetMaxTokens(20000);
+chatClient.SetModel("gpt-4o-mini");
+chatClient.SetMaxTokens(5000);
 chatClient.SetSystemRole("You are a professional accountant, and lawyer");
 chatClient.SetTemperature(0.7);
 chatClient.ClearPreviousQuestionAndAnswerPairs();

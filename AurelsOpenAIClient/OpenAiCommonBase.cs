@@ -7,7 +7,7 @@ namespace AurelsOpenAIClient
     {
         internal string endpoint { get; set; }
         internal string model { get; set; } 
-        internal int maxTokens { get; set; } = 100000;
+        internal int maxTokens { get; set; } = 5000;
         internal HttpClient httpClient { get; set; }
         internal string jsonRequest { get; set; } = string.Empty;
         internal string jsonResponse { get; set; } = string.Empty;
@@ -54,9 +54,21 @@ namespace AurelsOpenAIClient
 
         public int GetResponseTimeMs() => this.responseTime;
 
-        public string GetJsonRequest() => this.jsonRequest;
+        public string GetJsonRequest()
+        {
+            if (string.IsNullOrEmpty(this.jsonRequest))
+                return string.Empty;
 
-        public string GetJsonResponse() => this.jsonResponse;
+            return Newtonsoft.Json.Linq.JToken.Parse(this.jsonRequest).ToString(Newtonsoft.Json.Formatting.Indented);
+        }
+
+        public string GetJsonResponse()
+        {
+            if (string.IsNullOrEmpty(this.jsonResponse))
+                return string.Empty;
+
+            return Newtonsoft.Json.Linq.JToken.Parse(this.jsonResponse).ToString(Newtonsoft.Json.Formatting.Indented);
+        }
 
     }
 }

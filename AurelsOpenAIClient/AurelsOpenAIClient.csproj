@@ -2,9 +2,9 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <AssemblyVersion>1.0.9</AssemblyVersion>
-    <FileVersion>1.0.9</FileVersion>
-    <Version>1.0.9</Version>
+    <AssemblyVersion>1.1.0</AssemblyVersion>
+    <FileVersion>1.1.0</FileVersion>
+    <Version>1.1.0</Version>
     <Title>AurelsOpenAIClient</Title>
     <Authors>aurel192</Authors>
     <Company>aurel192</Company>
@@ -14,10 +14,6 @@
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
   </PropertyGroup>
-
-  <ItemGroup>
-    <Compile Remove="Chat\AdvancedTranslator.cs" />
-  </ItemGroup>
 
   <ItemGroup>
     

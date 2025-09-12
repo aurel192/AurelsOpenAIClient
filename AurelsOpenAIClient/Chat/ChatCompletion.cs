@@ -242,38 +242,55 @@ namespace AurelsOpenAIClient.Chat
         }
 
         #region Functions
-        private async Task<string> GetResponse(ChatCompletionsParameters chatCompletetionParameters) // ,bool log = false)
+        private async Task<string> GetResponse(ChatCompletionsParameters chatCompletetionParameters, bool logWhenErrorOccours = false)
         {
-            string question = GetQuestion(chatCompletetionParameters);
+            try
+            {
+                string question = GetQuestion(chatCompletetionParameters);
 
-            if (string.IsNullOrEmpty(chatCompletetionParameters.model))
-                throw new ApplicationException("LLM ChatCompletetion model is not set.");
+                if (string.IsNullOrEmpty(chatCompletetionParameters.model))
+                    throw new ApplicationException("LLM ChatCompletetion model is not set.");
 
-            this.jsonRequest = JsonConvert.SerializeObject(chatCompletetionParameters);
+                this.jsonRequest = JsonConvert.SerializeObject(chatCompletetionParameters);
 
-            StringContent content = new StringContent(this.jsonRequest, Encoding.UTF8, "application/json");
+                StringContent content = new StringContent(this.jsonRequest, Encoding.UTF8, "application/json");
 
-            DateTime start = DateTime.Now;
+                DateTime start = DateTime.Now;
 
-            HttpResponseMessage response = await httpClient.PostAsync(endpoint, content);
-            response.EnsureSuccessStatusCode();
+                HttpResponseMessage response = await httpClient.PostAsync(endpoint, content);
+                response.EnsureSuccessStatusCode();
 
-            this.responseTime = (int)(DateTime.Now - start).TotalMilliseconds;
+                this.responseTime = (int)(DateTime.Now - start).TotalMilliseconds;
+                this.jsonResponse = string.Empty;
 
-            this.jsonResponse = await response.Content.ReadAsStringAsync();
+                this.jsonResponse = await response.Content.ReadAsStringAsync();
+                this.openAiChatCompletionResponse = JsonConvert.DeserializeObject<ChatResponse>(this.jsonResponse);
 
-            this.openAiChatCompletionResponse = JsonConvert.DeserializeObject<ChatResponse>(jsonResponse);
+                JsonSerializerSettings serializerSettings = new JsonSerializerSettings
+                {
+                    Formatting = Formatting.Indented,
+                    NullValueHandling = NullValueHandling.Ignore
+                };
+                string formattedJsonResponse = JsonConvert.SerializeObject(this.openAiChatCompletionResponse, serializerSettings);
 
-            //if (log)
-            //{
-            //    Log(chatCompletetionParameters.messages, openAiChatCompletionResponse.choices.ToList());
-            //}
+                string chatResponse = openAiChatCompletionResponse?.choices[0]?.message?.content?.ToString();
 
-            string chatResponse = openAiChatCompletionResponse?.choices[0]?.message?.content?.ToString();
+                StorePreviousQuestionsAndAnswers(question, chatResponse);
 
-            StorePreviousQuestionsAndAnswers(question, chatResponse);
-
-            return chatResponse;
+                return chatResponse;
+            }
+            catch (Exception ex)
+            {
+                if (logWhenErrorOccours)
+                {
+                    string error = ex.Message + Environment.NewLine;
+                    error += "Request:" + Environment.NewLine + this.jsonRequest + Environment.NewLine;
+                    error += "Response:" + Environment.NewLine + this.jsonRequest + Environment.NewLine;
+                    string timestamp = DateTime.Now.ToString("yyyy_MM_dd__HH_mm_ss");
+                    File.WriteAllText($"GetResponse_Exception_{timestamp}.txt", error);
+                }
+                return ex.Message;
+            }
         }
 
         private string GetQuestion(ChatCompletionsParameters chatCompletetionParameters)
