@@ -2,9 +2,9 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <AssemblyVersion>1.1.0</AssemblyVersion>
-    <FileVersion>1.1.0</FileVersion>
-    <Version>1.1.0</Version>
+    <AssemblyVersion>1.1.1</AssemblyVersion>
+    <FileVersion>1.1.1</FileVersion>
+    <Version>1.1.1</Version>
     <Title>AurelsOpenAIClient</Title>
     <Authors>aurel192</Authors>
     <Company>aurel192</Company>
@@ -16,8 +16,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+
+    <PackageReference Include="System.Text.Json" Version="9.0.9" />
 
     <None Update="AurelsOpenAIClient.png">
       <Pack>True</Pack>
@@ -34,6 +34,10 @@
       <PackagePath></PackagePath>
     </None>
 
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="ModelList\" />
   </ItemGroup>
   
 </Project>

@@ -13,9 +13,9 @@ namespace AurelsOpenAIClient.Chat.Request
 
         public PreviousQuestionAnswerPair(string question, string answer)
         {
-            this.Timestamp = DateTime.Now;
-            this.Question = new ChatCompletionsMessage(role: "user", content: question);
-            this.Answer = new ChatCompletionsMessage(role: "assistant", content: answer);
+            Timestamp = DateTime.Now;
+            Question = new ChatCompletionsMessage(role: "user", content: question);
+            Answer = new ChatCompletionsMessage(role: "assistant", content: answer);
         }
 
         public override string ToString()

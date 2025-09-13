@@ -1,50 +1,39 @@
-﻿using System;
+﻿using AurelsOpenAIClient.Audio.Response;
+using System;
 using System.IO;
 using System.Net.Http;
-using System.Threading.Tasks;
 using System.Net.Http.Headers;
-using Newtonsoft.Json;
-using AurelsOpenAIClient.Audio.Response;
+using System.Text;
+using System.Text.Json;
+using System.Threading.Tasks;
 
 namespace AurelsOpenAIClient.Chat
 {
-    /// <summary>
-    /// Transcribe models: whisper-1, gpt-4o-transcribe, gpt-4o-mini-transcribe
-    /// https://platform.openai.com/docs/api-reference/audio/createTranscription
-    /// </summary>
-    /// <param name="apiKey"></param>
-    /// <param name="organization"></param>
-    /// <param name="project"></param>
-    /// <exception cref="Exception"></exception>
     public class SpeechToText : OpenAiCommonBase
     {
         private float temperature = 0.0f;
         private TranscriptionResponse transcriptionResponse;
 
-        public SpeechToText(string apiKey, string organization = null, string project = null)
+        /// <summary>
+        /// Transcribe models: whisper-1, gpt-4o-transcribe, gpt-4o-mini-transcribe
+        /// https://platform.openai.com/docs/api-reference/audio/createTranscription
+        /// </summary>
+        /// <param name="apiKey"></param>
+        /// <param name="organization"></param>
+        /// <param name="project"></param>
+        /// <exception cref="Exception"></exception>
+        public SpeechToText(string apiKey, string organization = null, string project = null) : base(apiKey, organization, project)
         {
-            this.httpClient = new HttpClient();
-            this.endpoint = "https://api.openai.com/v1/audio/transcriptions";
-            this.model = "gpt-4o-transcribe"; // default model
-            this.temperature = 0.0f; // default temperature
-
-            if (!string.IsNullOrEmpty(apiKey))
-                this.httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {apiKey}");
-            else
-                throw new ApplicationException("API key is not set.");
-
-            if (!string.IsNullOrEmpty(organization))
-                this.httpClient.DefaultRequestHeaders.Add("OpenAI-Organization", organization);
-
-            if (!string.IsNullOrEmpty(project))
-                this.httpClient.DefaultRequestHeaders.Add("OpenAI-Project", project);
+            _endpoint = "https://api.openai.com/v1/audio/transcriptions";
+            _model = "gpt-4o-transcribe"; // default model
+            temperature = 0.0f; // default temperature
         }
 
         /// <summary>
         /// Transcribes audio into the input language.
         /// </summary>
-        /// <param name="filePath"></param>
-        /// <param name="language">Optinal. The language of the input audio. Supplying the input language in ISO-639-1 (e.g. en) format will improve accuracy and latency.</param>
+        /// <param name="filePath">The path to the audio file to be transcribed</param>
+        /// <param name="language">Optinal. The language of the input audio. Supplying the input language in ISO-639-1 format (e.g. "en", "de", "es", "hu") will improve accuracy and latency.</param>
         /// <param name="response_format">Optional. Defaults is json. The format of the output, in one of these options: json, text, srt, verbose_json, or vtt.For gpt-4o-transcribe and gpt-4o-mini-transcribe, the only supported format is json</param>
         /// <param name="promt">Optional. The prompt can be used to provide context to the model about the audio content. It can be useful for improving accuracy in specific scenarios, such as when there is background noise or when the audio contains specialized terminology.</param>
         /// <param name="chunking_strategy">Optional when set to auto, the server first normalizes loudness and then uses voice activity detection (VAD) to choose boundaries. If unset, the audio is transcribed as a single block. Thus if you want to stream audio transcription chunks, you have to set it to auto when setting stream = True.</param>
@@ -67,20 +56,45 @@ namespace AurelsOpenAIClient.Chat
                 audioFileContent.Headers.ContentType = new MediaTypeHeaderValue("audio/mpeg");
 
                 formData.Add(audioFileContent, "file", Path.GetFileName(filePath));
-                formData.Add(new StringContent(this.model), "model");
-                formData.Add(new StringContent(this.temperature.ToString()), "temperature");
+                formData.Add(new StringContent(_model), "model");
+                formData.Add(new StringContent(temperature.ToString()), "temperature");
 
                 if (!(chunking_strategy is null))
                 {
-                    if (chunking_strategy is string)
+                    // chunking_strategy can be many different runtime types:
+                    // - string (already JSON or simple token)
+                    // - JsonDocument or JsonElement
+                    // - byte[] or ReadOnlyMemory<byte>
+                    // - any POCO / dictionary to be serialized
+                    string chunking_strategy_json;
+
+                    if (chunking_strategy is string s)
                     {
-                        formData.Add(new StringContent(chunking_strategy.ToString()), "chunking_strategy");
+                        chunking_strategy_json = s;
+                    }
+                    else if (chunking_strategy is JsonDocument jd)
+                    {
+                        chunking_strategy_json = JsonSerializer.Serialize(jd.RootElement, new JsonSerializerOptions { WriteIndented = false });
+                    }
+                    else if (chunking_strategy is JsonElement je)
+                    {
+                        chunking_strategy_json = JsonSerializer.Serialize(je, new JsonSerializerOptions { WriteIndented = false });
+                    }
+                    else if (chunking_strategy is byte[] bytes)
+                    {
+                        chunking_strategy_json = Encoding.UTF8.GetString(bytes);
+                    }
+                    else if (chunking_strategy is ReadOnlyMemory<byte> rom)
+                    {
+                        chunking_strategy_json = Encoding.UTF8.GetString(rom.ToArray());
                     }
                     else
                     {
-                        string chunking_strategy_json = JsonConvert.SerializeObject(chunking_strategy);
-                        formData.Add(new StringContent(chunking_strategy_json), "chunking_strategy");
+                        // Generic fallback: serialize unknown runtime object to JSON
+                        chunking_strategy_json = JsonSerializer.Serialize(chunking_strategy, new JsonSerializerOptions { WriteIndented = false });
                     }
+
+                    formData.Add(new StringContent(chunking_strategy_json), "chunking_strategy");
                 }
 
                 // Optionally: if you know the language, you can set it: "en", "es", etc...
@@ -97,19 +111,24 @@ namespace AurelsOpenAIClient.Chat
 
                 DateTime start = DateTime.Now;
 
-                HttpResponseMessage response = await httpClient.PostAsync(endpoint, formData);
+                HttpResponseMessage response = await _httpClient.PostAsync(_endpoint, formData);
                 response.EnsureSuccessStatusCode();
 
-                responseTime = (int)(DateTime.Now - start).TotalMilliseconds;
+                _responseTime = (int)(DateTime.Now - start).TotalMilliseconds;
 
                 string responseBody = await response.Content.ReadAsStringAsync();
-                transcriptionResponse = JsonConvert.DeserializeObject<TranscriptionResponse>(responseBody);
+
+                JsonSerializerOptions options = new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                };
+                transcriptionResponse = JsonSerializer.Deserialize<TranscriptionResponse>(responseBody, options);
 
                 transcribedResponse = transcriptionResponse?.text?.ToString();
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                Console.WriteLine($"Error: {ex.Message}");
+                throw;
             }
 
             return transcribedResponse;

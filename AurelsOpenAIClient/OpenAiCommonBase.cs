@@ -1,20 +1,36 @@
 ﻿using System;
 using System.Net.Http;
+using System.Text.Json;
 
 namespace AurelsOpenAIClient
 {
-    public class OpenAiCommonBase
+    public abstract class OpenAiCommonBase : IDisposable
     {
-        internal string endpoint { get; set; }
-        internal string model { get; set; } 
-        internal int maxTokens { get; set; } = 5000;
-        internal HttpClient httpClient { get; set; }
-        internal string jsonRequest { get; set; } = string.Empty;
-        internal string jsonResponse { get; set; } = string.Empty;
-        internal int responseTime { get; set; } = 0;
+        protected readonly HttpClient _httpClient;
+        protected string _endpoint;
+        protected string _model;
+        protected int _maxTokens;
+        protected string _jsonRequest;
+        protected string _jsonResponse;
+        protected int _responseTime;
+
+        protected OpenAiCommonBase(string apiKey, string organization, string project)
+        {
+            _httpClient = new HttpClient();
+            if (!string.IsNullOrEmpty(apiKey))
+                _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {apiKey}");
+            else
+                throw new ApplicationException("API key is not set.");
+
+            if (!string.IsNullOrEmpty(organization))
+                _httpClient.DefaultRequestHeaders.Add("OpenAI-Organization", organization);
+
+            if (!string.IsNullOrEmpty(project))
+                _httpClient.DefaultRequestHeaders.Add("OpenAI-Project", project);
+        }
 
         /// <summary>
-        /// Set the model to be used for the request (e.g. "gpt-4", "gpt-3.5-turbo")
+        /// Set the model to be used for the request (e.g. "gpt-4o", "gpt-3.5-turbo")
         /// </summary>
         /// <param name="model"></param>
         /// <exception cref="ArgumentNullException"></exception>
@@ -23,7 +39,7 @@ namespace AurelsOpenAIClient
             if (string.IsNullOrEmpty(model))
                 throw new ArgumentNullException("Model can not be empty.");
 
-            this.model = model;
+            _model = model;
         }
 
         /// <summary>
@@ -36,7 +52,7 @@ namespace AurelsOpenAIClient
             if (string.IsNullOrEmpty(endpoint))
                 throw new ArgumentNullException("Endpoint can not be empty.");
 
-            this.endpoint = endpoint;
+            _endpoint = endpoint;
         }
 
         /// <summary>
@@ -49,26 +65,36 @@ namespace AurelsOpenAIClient
             if (maxTokens <= 0)
                 throw new ArgumentException("Max tokens must be a positive integer!");
 
-            this.maxTokens = maxTokens;
+            _maxTokens = maxTokens;
         }
 
-        public int GetResponseTimeMs() => this.responseTime;
+        public int GetResponseTimeMs() => _responseTime;
 
         public string GetJsonRequest()
         {
-            if (string.IsNullOrEmpty(this.jsonRequest))
+            if (string.IsNullOrEmpty(_jsonRequest))
                 return string.Empty;
 
-            return Newtonsoft.Json.Linq.JToken.Parse(this.jsonRequest).ToString(Newtonsoft.Json.Formatting.Indented);
+            using (JsonDocument doc = JsonDocument.Parse(_jsonRequest))
+            {
+                return JsonSerializer.Serialize(doc.RootElement, new JsonSerializerOptions { WriteIndented = true });
+            }
         }
 
         public string GetJsonResponse()
         {
-            if (string.IsNullOrEmpty(this.jsonResponse))
+            if (string.IsNullOrEmpty(_jsonResponse))
                 return string.Empty;
 
-            return Newtonsoft.Json.Linq.JToken.Parse(this.jsonResponse).ToString(Newtonsoft.Json.Formatting.Indented);
+            using (JsonDocument doc = JsonDocument.Parse(_jsonResponse))
+            {
+                return JsonSerializer.Serialize(doc.RootElement, new JsonSerializerOptions { WriteIndented = true });
+            }
         }
 
+        public void Dispose()
+        {
+            _httpClient.Dispose();
+        }
     }
 }

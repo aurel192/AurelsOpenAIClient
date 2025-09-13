@@ -1,6 +1,6 @@
 # AurelsOpenAIClient
 
-**Version:** 1.1.0
+**Version:** 1.1.1
 
 AurelsOpenAIClient is a simple .NET library for integrating OpenAI APIs into your applications. It supports various functionalities such as Chat Completion, Speech-to-Text, Text-to-Speech, and Translation. All you need is an OpenAI API key.
 
@@ -12,7 +12,7 @@ AurelsOpenAIClient is a simple .NET library for integrating OpenAI APIs into you
 
 ## Features
 - **Models**: List all the available models by OpenAI
-- **Chat Completion**: Interact with OpenAI's chat models like `gpt-5-chat-latest`, `gpt-4o`, `gpt-4o-mini`,`gpt-3.5-turbo`, and more.
+- **Chat Completion**: Interact with OpenAI's chat models like `gpt-5-chat-latest`, `gpt-4o`, `gpt-4o-mini`, `gpt-4.1-mini`, `gpt-3.5-turbo`, and more.
 - **Speech-to-Text**: Convert audio files into text using OpenAI's `whisper-1` model.
 - **Text-to-Speech**: Generate speech from text with customizable voice and speed.
 - **Translation**: Translate audio files into English using OpenAI's `whisper-1` model.
@@ -29,7 +29,7 @@ AurelsOpenAIClient is a simple .NET library for integrating OpenAI APIs into you
 
 Add the AurelsOpenAIClient library to your project using CLI or via NuGet Package Manager.
 ```
-dotnet add package AurelsOpenAIClient --version 1.1.0
+dotnet add package AurelsOpenAIClient --version 1.1.1
 ```
 Ensure you have a valid OpenAI API key to use the services!
 You can top up your OpenAI credit with as little as 5 USD

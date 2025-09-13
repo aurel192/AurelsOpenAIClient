@@ -1,47 +1,35 @@
 ﻿using AurelsOpenAIClient.Audio.Request;
-using Newtonsoft.Json;
 using System;
 using System.IO;
 using System.Net.Http;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace AurelsOpenAIClient.Chat
 {
+    /// <summary>
+    /// TTS models: tts-1, tts-1-hd or gpt-4o-mini-tts
+    /// https://platform.openai.com/docs/api-reference/audio/createSpeech
+    /// </summary>
+    /// <param name="apiKey"></param>
+    /// <param name="organization">Optional</param>
+    /// <param name="project">Optional</param>
+    /// <exception cref="Exception"></exception>
     public class TextToSpeech : OpenAiCommonBase
     {
-        /// <summary>
-        /// TTS models: tts-1, tts-1-hd or gpt-4o-mini-tts
-        /// https://platform.openai.com/docs/api-reference/audio/createSpeech
-        /// </summary>
-        /// <param name="apiKey"></param>
-        /// <param name="organization">Optional</param>
-        /// <param name="project">Optional</param>
-        /// <exception cref="Exception"></exception>
-        public TextToSpeech(string apiKey, string organization = null, string project = null)
+        public TextToSpeech(string apiKey, string organization = null, string project = null) : base(apiKey, organization, project)
         {
-            this.httpClient = new HttpClient();
-            this.endpoint = "https://api.openai.com/v1/audio/speech";
-            this.model = "tts-1"; // default model
-
-            if (!string.IsNullOrEmpty(apiKey))
-                this.httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {apiKey}");
-            else
-                throw new ApplicationException("OpenAI API key is not set.");
-
-            if (!string.IsNullOrEmpty(organization))
-                this.httpClient.DefaultRequestHeaders.Add("OpenAI-Organization", organization);
-
-            if (!string.IsNullOrEmpty(project))
-                this.httpClient.DefaultRequestHeaders.Add("OpenAI-Project", project);
+            _endpoint = "https://api.openai.com/v1/audio/speech";
+            _model = "tts-1"; // default model
         }
 
         /// <summary>
-        /// Enum Voice: alloy, ash, ballad, coral, echo, fable, onyx, nova, sage, shimmer, verse
+        /// Generate speech audio (MP3) from text input.
         /// </summary>
-        /// <param name="text"></param>
-        /// <param name="voice"></param>
-        /// <param name="speed"></param>
+        /// <param name="text">The text to be converted to audio</param>
+        /// <param name="voice">Voice(Enum): alloy, ash, ballad, coral, echo, fable, onyx, nova, sage, shimmer, verse</param>
+        /// <param name="speed">Number between 0.25 and 4.0</param>
         /// <param name="pathToSaveMP3"></param>
         /// <returns>string responseFilePath</returns>
         /// <exception cref="Exception"></exception>
@@ -53,11 +41,11 @@ namespace AurelsOpenAIClient.Chat
         }
 
         /// <summary>
-        /// string Voice: alloy, ash, ballad, coral, echo, fable, onyx, nova, sage, shimmer, verse
+        /// Generate speech audio (MP3) from text input.
         /// </summary>
-        /// <param name="text"></param>
-        /// <param name="voice"></param>
-        /// <param name="speed"></param>
+        /// <param name="text">The text to be converted to audio</param>
+        /// <param name="voice">Voices(string): alloy, ash, ballad, coral, echo, fable, onyx, nova, sage, shimmer, verse</param>
+        /// <param name="speed">Number between 0.25 and 4.0</param>
         /// <param name="pathToSaveMP3"></param>
         /// <returns>string responseFileName</returns>
         /// <exception cref="Exception"></exception>
@@ -76,7 +64,7 @@ namespace AurelsOpenAIClient.Chat
             if (text.Length > 4096)
                 throw new ApplicationException("text must be shorter than 4096 characters.");
 
-            if (string.IsNullOrEmpty(model))
+            if (string.IsNullOrEmpty(_model))
                 throw new ApplicationException("OpenAI Model is not set.");
 
             if (speed < 0.25 || speed > 4)
@@ -87,19 +75,18 @@ namespace AurelsOpenAIClient.Chat
         {
             try
             {
-                // Request JSON 
-                SpeechGenerationRequest speechGenerationRequest = new SpeechGenerationRequest(Input: text, Model: model, Voice: voice, Speed: speed);
+                SpeechGenerationRequest speechGenerationRequest = new SpeechGenerationRequest(Input: text, Model: _model, Voice: voice, Speed: speed);
 
-                jsonRequest = JsonConvert.SerializeObject(speechGenerationRequest);
+                _jsonRequest = JsonSerializer.Serialize(speechGenerationRequest, new JsonSerializerOptions { WriteIndented = true });
 
-                StringContent jsonContent = new StringContent(jsonRequest, Encoding.UTF8, "application/json");
+                StringContent jsonContent = new StringContent(_jsonRequest, Encoding.UTF8, "application/json");
 
                 DateTime start = DateTime.Now;
 
-                HttpResponseMessage response = await httpClient.PostAsync(endpoint, jsonContent);
+                HttpResponseMessage response = await _httpClient.PostAsync(_endpoint, jsonContent);
                 response.EnsureSuccessStatusCode();
 
-                responseTime = (int)(DateTime.Now - start).TotalMilliseconds;
+                _responseTime = (int)(DateTime.Now - start).TotalMilliseconds;
 
                 byte[] mp3Data = await response.Content.ReadAsByteArrayAsync();
 
@@ -123,7 +110,7 @@ namespace AurelsOpenAIClient.Chat
             while (true)
             {
                 await Task.Delay(30);
-                if (cntr++ > 500)
+                if (cntr++ > 1000) // wait max 30 seconds
                     throw new IOException($"Cannot write file: {pathToSaveMP3}");
 
                 if (File.Exists(pathToSaveMP3))

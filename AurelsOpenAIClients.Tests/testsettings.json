@@ -1,0 +1,6 @@
+{
+  "OpenAI": {
+    "ApiKey": "YOUR_OPENAI_API_KEY",
+    "SampleAudioFile": "SampleAudioFile.mp3"
+  }
+}

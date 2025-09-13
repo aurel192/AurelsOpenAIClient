@@ -1,23 +1,23 @@
-﻿using System;
+﻿using AurelsOpenAIClient.Chat.Parameters;
+using AurelsOpenAIClient.Chat.Request;
+using AurelsOpenAIClient.Chat.Response;
+using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
-using System.Collections.Generic;
-using Newtonsoft.Json;
-using AurelsOpenAIClient.Chat.Parameters;
-using AurelsOpenAIClient.Chat.Response;
-using AurelsOpenAIClient.Chat.Request;
 
 namespace AurelsOpenAIClient.Chat
 {
     public class ChatCompletion : OpenAiCommonBase
     {
-        public List<PreviousQuestionAnswerPair> PreviousQuestionsAndAnswers = new List<PreviousQuestionAnswerPair>();
-        private ChatResponse openAiChatCompletionResponse { get; set; } = default(ChatResponse);
-        private string systemRole;
-        private float temperature = 0.7f;
+        private List<PreviousQuestionAnswerPair> _previousQuestionsAndAnswers;
+        private ChatResponse _openAiChatCompletionResponse;
+        private string _systemRole;
+        private float _temperature;
 
         /// <summary>
         /// ChatCompletetion class to interact with chat endpoint.
@@ -30,28 +30,17 @@ namespace AurelsOpenAIClient.Chat
         /// <param name="apiKey"></param>
         /// <param name="organization">Optional</param>
         /// <param name="project">Optional</param>
-        /// <exception cref="Exception"></exception>
-        public ChatCompletion(string apiKey, string organization = null, string project = null)
+        /// <exception cref="ApplicationException"></exception>
+        public ChatCompletion(string apiKey, string organization = null, string project = null) : base(apiKey, organization, project)
         {
-            this.httpClient = new HttpClient();
-            this.endpoint = "https://api.openai.com/v1/chat/completions";
-            this.systemRole = "You are a helpful assistant.";
-            this.model = "gpt-4o"; // default model
-            this.temperature = 0.7f; // default temperature
-
-            if (!string.IsNullOrEmpty(apiKey))
-                this.httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {apiKey}");
-            else
-                throw new ApplicationException("API key is not set.");
-
-            if (!string.IsNullOrEmpty(organization))
-                this.httpClient.DefaultRequestHeaders.Add("OpenAI-Organization", organization);
-
-            if (!string.IsNullOrEmpty(project))
-                this.httpClient.DefaultRequestHeaders.Add("OpenAI-Project", project);
-
-            this.PreviousQuestionsAndAnswers = new List<PreviousQuestionAnswerPair>();
+            _endpoint = "https://api.openai.com/v1/chat/completions";
+            _systemRole = "You are a helpful assistant.";
+            _model = "gpt-4o"; // default model
+            _temperature = 0.7f; // default temperature
+            _maxTokens = 5000; // default max tokens
+            _previousQuestionsAndAnswers = new List<PreviousQuestionAnswerPair>();
         }
+
         #region Settings
 
         /// <summary>
@@ -63,11 +52,11 @@ namespace AurelsOpenAIClient.Chat
         {
             if (string.IsNullOrEmpty(systemRole))
             {
-                this.systemRole = "You are a helpful assistant.";
+                _systemRole = "You are a helpful assistant.";
                 throw new ArgumentException("SystemRole must not be empty! Now it is set to default value: \"You are a helpful assistant.\" ");
             }
 
-            this.systemRole = systemRole;
+            _systemRole = systemRole;
         }
 
         /// <summary>
@@ -84,12 +73,34 @@ namespace AurelsOpenAIClient.Chat
             if (temperature < 0 || temperature > 2)
                 throw new ApplicationException("Temperature must be a value between 0.0 and 2.0");
 
-            this.temperature = temperature;
+            temperature = temperature;
         }
+        #endregion
 
+        #region QuestionAnswerPairs
+
+        /// <summary>
+        /// Use this function to clear all previous question and answer pairs.
+        /// </summary>
         public void ClearPreviousQuestionAndAnswerPairs()
         {
-            this.PreviousQuestionsAndAnswers = new List<PreviousQuestionAnswerPair>();
+            _previousQuestionsAndAnswers = new List<PreviousQuestionAnswerPair>();
+        }
+
+        /// <summary>
+        /// Retrieve the most recent question and answer pairs, up to the specified count.
+        /// </summary>
+        /// <param name="count">Number of most recent Q&A pairs</param>
+        /// <returns>most recent Q&A pairs as List<PreviousQuestionAnswerPair></returns>
+        public List<PreviousQuestionAnswerPair> GetMostRecentQuestionAnswerPairs(int count)
+        {
+            List<PreviousQuestionAnswerPair> previousQAs = _previousQuestionsAndAnswers
+                .OrderByDescending(pair => pair.Timestamp)
+                .Take(count)
+                .OrderBy(pair => pair.Timestamp)
+                .ToList();
+
+            return previousQAs;
         }
 
         /// <summary>
@@ -106,7 +117,7 @@ namespace AurelsOpenAIClient.Chat
             // Search for the oldest QA pair
             PreviousQuestionAnswerPair firstMatch = null;
 
-            foreach (PreviousQuestionAnswerPair qaPair in this.PreviousQuestionsAndAnswers)
+            foreach (PreviousQuestionAnswerPair qaPair in _previousQuestionsAndAnswers)
             {
                 if (keywords.Any(kw =>
                     (qaPair.Question.content?.IndexOf(kw, StringComparison.OrdinalIgnoreCase) >= 0) ||
@@ -121,10 +132,10 @@ namespace AurelsOpenAIClient.Chat
             {
                 if (deleteQAsBefore)
                 {
-                    this.PreviousQuestionsAndAnswers.RemoveAll(qa => qa.Timestamp < firstMatch.Timestamp);
+                    _previousQuestionsAndAnswers.RemoveAll(qa => qa.Timestamp < firstMatch.Timestamp);
                 }
 
-                List<PreviousQuestionAnswerPair> previousRelevantQAs = this.PreviousQuestionsAndAnswers
+                List<PreviousQuestionAnswerPair> previousRelevantQAs = _previousQuestionsAndAnswers
                     .Where(t => t.Timestamp >= firstMatch.Timestamp)
                     .ToList();
 
@@ -135,43 +146,39 @@ namespace AurelsOpenAIClient.Chat
         }
         #endregion
 
+        #region SendChat overloads and SendChatAdvanced
+
         /// <summary>
-        /// ChatCompletetion with only user input, using default system role and temperature, no previous questions and answers will be included in the request.
+        /// ChatCompletetion with only user input argument.
+        /// No previous questions and answers pairs will be included in the request.
         /// </summary>
         /// <param name="userInput"></param>
         /// <returns>Chat response as string</returns>
-        public async Task<string> SendChat(string userInput)
+        public async Task<string> SendChat(string userInput, bool throwExceptionWhenErrorOccours = false, bool logWhenErrorOccours = false)
         {
-            try
-            {
-                ChatCompletionsMessage userInputMessage = new ChatCompletionsMessage(role: "user", content: userInput);
-                ChatCompletionsMessage roleInputMessage = new ChatCompletionsMessage(role: "system", content: this.systemRole);
-                List<ChatCompletionsMessage> messages = new List<ChatCompletionsMessage> { roleInputMessage, userInputMessage };
+            ChatCompletionsMessage userInputMessage = new ChatCompletionsMessage(role: "user", content: userInput);
+            ChatCompletionsMessage roleInputMessage = new ChatCompletionsMessage(role: "system", content: _systemRole);
+            List<ChatCompletionsMessage> messages = new List<ChatCompletionsMessage> { roleInputMessage, userInputMessage };
 
-                ChatCompletionsParameters chatCompletetionParameters =
-                    new ChatCompletionsParameters(model: this.model, messages: messages, temperature: this.temperature, max_tokens: this.maxTokens);
+            ChatCompletionsParameters chatCompletetionParameters =
+                new ChatCompletionsParameters(model: _model, messages: messages, temperature: _temperature, max_tokens: _maxTokens);
 
-                string response = await GetResponse(chatCompletetionParameters);
-                return response;
-            }
-            catch (Exception ex)
-            {
-                string err = ex.Message;
-                throw;
-            }
+            string response = await GetResponse(chatCompletetionParameters, throwExceptionWhenErrorOccours, logWhenErrorOccours);
+            return response;
         }
 
         /// <summary>
-        /// 
+        /// ChatCompletetion with only user input argument.
+        /// The given number of previous questions and answers pairs will be included in the request.
         /// </summary>
         /// <param name="userInput">Current question or instruction that will be sent to the endpoint.</param>
         /// <param name="numberOfPreviousQA">The given amount of question and answer pairs will be included in the request</param>
         /// <returns>Chat response as string</returns>
-        public async Task<string> SendChat(string userInput, int numberOfPreviousQA = 0)
+        public async Task<string> SendChat(string userInput, int numberOfPreviousQA, bool throwExceptionWhenErrorOccours = false, bool logWhenErrorOccours = false)
         {
             List<ChatCompletionsMessage> messages = new List<ChatCompletionsMessage>()
             {
-                new ChatCompletionsMessage(role: "system", content: this.systemRole)
+                new ChatCompletionsMessage(role: "system", content: _systemRole)
             };
 
             List<PreviousQuestionAnswerPair> prevQAs = GetMostRecentQuestionAnswerPairs(numberOfPreviousQA);
@@ -184,22 +191,24 @@ namespace AurelsOpenAIClient.Chat
 
             messages.Add(new ChatCompletionsMessage(role: "user", content: userInput));
 
-            string response = await SendChat(messages);
+            string response = await SendChat(messages, throwExceptionWhenErrorOccours, logWhenErrorOccours);
             return response;
         }
 
         /// <summary>
-        /// For Q&A + remembering previous questions and answers containing at least one of the given keywords, optional: Q&As can be deleted before any keyword found in conversation
+        /// You can use this function to search for keywords in previous Q&A pairs.
+        /// Only Q&A pairs containing at least one of the given keywords will be included in the request.
+        /// Optional: Q&As can be deleted before any keyword found in conversation
         /// </summary>
         /// <param name="userInput">Current question or instruction that will be sent to the endpoint.</param>
         /// <param name="keywords">At least one of the given given keywords must be in the question&answer pair. Only from this Q&A pair will be passed to the ChatCompletetion endpoint.</param>
         /// <param name="deleteQAsBefore">Optional parameter. When it is true, the Q&As will be deleted before the first occurrence. (It can be useful when the topic has changed in the conversation)</param>
         /// <returns>Chat response as string</returns>
-        public async Task<string> SendChat(string userInput, List<string> keywords, bool deleteQAsBefore = false)
+        public async Task<string> SendChat(string userInput, List<string> keywords, bool deleteQAsBefore = false, bool throwExceptionWhenErrorOccours = false, bool logWhenErrorOccours = false)
         {
             List<ChatCompletionsMessage> messages = new List<ChatCompletionsMessage>()
             {
-                new ChatCompletionsMessage(role: "system", content: this.systemRole)
+                new ChatCompletionsMessage(role: "system", content: _systemRole)
             };
 
             List<PreviousQuestionAnswerPair> prevQAs = GetLastQuestionAnswerPairsContainingKeywords(keywords, deleteQAsBefore);
@@ -212,22 +221,22 @@ namespace AurelsOpenAIClient.Chat
 
             messages.Add(new ChatCompletionsMessage(role: "user", content: userInput));
 
-            string response = await SendChat(messages);
+            string response = await SendChat(messages, throwExceptionWhenErrorOccours, logWhenErrorOccours);
             return response;
         }
 
         /// <summary>
-        /// ChatCompletetion with a List of messages, using default temperature.
+        /// ChatCompletetion with the  List of messages as argument.
         /// You have to include the current message and optionally the system role in the List of messages.
         /// </summary>
         /// <param name="messages">List<ChatCompletionsMessage></param>
         /// <returns>Chat response as string</returns>
-        public async Task<string> SendChat(List<ChatCompletionsMessage> messages)
+        public async Task<string> SendChat(List<ChatCompletionsMessage> messages, bool throwExceptionWhenErrorOccours = false, bool logWhenErrorOccours = false)
         {
             ChatCompletionsParameters chatCompletetionParameters =
-                new ChatCompletionsParameters(this.model, messages, this.maxTokens, this.temperature);
+                new ChatCompletionsParameters(_model, messages, _maxTokens, _temperature);
 
-            string response = await GetResponse(chatCompletetionParameters);
+            string response = await GetResponse(chatCompletetionParameters, throwExceptionWhenErrorOccours, logWhenErrorOccours);
             return response;
         }
 
@@ -236,13 +245,28 @@ namespace AurelsOpenAIClient.Chat
         /// </summary>
         /// <param name="chatCompletetionParameters"></param>
         /// <returns>Chat response as string</returns>
-        public async Task<string> SendChatAdvanced(ChatCompletionsParameters chatCompletetionParameters)
+        public async Task<string> SendChatAdvanced(ChatCompletionsParameters chatCompletetionParameters, bool throwExceptionWhenErrorOccours = false, bool logWhenErrorOccours = false)
         {
-            return await GetResponse(chatCompletetionParameters);
+            return await GetResponse(chatCompletetionParameters, throwExceptionWhenErrorOccours, logWhenErrorOccours);
         }
+        #endregion
 
-        #region Functions
-        private async Task<string> GetResponse(ChatCompletionsParameters chatCompletetionParameters, bool logWhenErrorOccours = false)
+        #region ResponseSpecificFunctions
+
+        public ChatResponse GetFullChatResponse() => _openAiChatCompletionResponse;
+
+        public int GetTotalTokens() => _openAiChatCompletionResponse?.usage?.total_tokens ?? 0;
+
+        public int GetPromtTokens() => _openAiChatCompletionResponse?.usage?.prompt_tokens ?? 0;
+
+        public int GetCompletionTokens() => _openAiChatCompletionResponse?.usage?.completion_tokens ?? 0;
+
+        public string GetLastAnswer() => _openAiChatCompletionResponse?.choices?[0]?.message?.content;
+        #endregion
+
+        #region Private Functions
+
+        private async Task<string> GetResponse(ChatCompletionsParameters chatCompletetionParameters, bool throwExceptionWhenErrorOccours = false, bool logWhenErrorOccours = false)
         {
             try
             {
@@ -251,29 +275,27 @@ namespace AurelsOpenAIClient.Chat
                 if (string.IsNullOrEmpty(chatCompletetionParameters.model))
                     throw new ApplicationException("LLM ChatCompletetion model is not set.");
 
-                this.jsonRequest = JsonConvert.SerializeObject(chatCompletetionParameters);
+                _jsonRequest = JsonSerializer.Serialize(chatCompletetionParameters, new JsonSerializerOptions { WriteIndented = true });
 
-                StringContent content = new StringContent(this.jsonRequest, Encoding.UTF8, "application/json");
+                StringContent content = new StringContent(_jsonRequest, Encoding.UTF8, "application/json");
 
                 DateTime start = DateTime.Now;
 
-                HttpResponseMessage response = await httpClient.PostAsync(endpoint, content);
+                HttpResponseMessage response = await _httpClient.PostAsync(_endpoint, content);
                 response.EnsureSuccessStatusCode();
 
-                this.responseTime = (int)(DateTime.Now - start).TotalMilliseconds;
-                this.jsonResponse = string.Empty;
+                _responseTime = (int)(DateTime.Now - start).TotalMilliseconds;
+                _jsonResponse = string.Empty;
 
-                this.jsonResponse = await response.Content.ReadAsStringAsync();
-                this.openAiChatCompletionResponse = JsonConvert.DeserializeObject<ChatResponse>(this.jsonResponse);
+                _jsonResponse = await response.Content.ReadAsStringAsync();
 
-                JsonSerializerSettings serializerSettings = new JsonSerializerSettings
-                {
-                    Formatting = Formatting.Indented,
-                    NullValueHandling = NullValueHandling.Ignore
-                };
-                string formattedJsonResponse = JsonConvert.SerializeObject(this.openAiChatCompletionResponse, serializerSettings);
+                _openAiChatCompletionResponse = 
+                    JsonSerializer.Deserialize<ChatResponse>(_jsonResponse,
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
-                string chatResponse = openAiChatCompletionResponse?.choices[0]?.message?.content?.ToString();
+                _jsonRequest = JsonSerializer.Serialize(_openAiChatCompletionResponse, new JsonSerializerOptions { WriteIndented = true });
+
+                string chatResponse = _openAiChatCompletionResponse?.choices[0]?.message?.content?.ToString();
 
                 StorePreviousQuestionsAndAnswers(question, chatResponse);
 
@@ -284,12 +306,15 @@ namespace AurelsOpenAIClient.Chat
                 if (logWhenErrorOccours)
                 {
                     string error = ex.Message + Environment.NewLine;
-                    error += "Request:" + Environment.NewLine + this.jsonRequest + Environment.NewLine;
-                    error += "Response:" + Environment.NewLine + this.jsonRequest + Environment.NewLine;
+                    error += "Request:" + Environment.NewLine + _jsonRequest + Environment.NewLine;
+                    error += "Response:" + Environment.NewLine + _jsonResponse + Environment.NewLine;
                     string timestamp = DateTime.Now.ToString("yyyy_MM_dd__HH_mm_ss");
                     File.WriteAllText($"GetResponse_Exception_{timestamp}.txt", error);
                 }
-                return ex.Message;
+                if (throwExceptionWhenErrorOccours)
+                    throw;
+                else
+                    return ex.Message;
             }
         }
 
@@ -301,44 +326,9 @@ namespace AurelsOpenAIClient.Chat
         private void StorePreviousQuestionsAndAnswers(string question, string answer)
         {
             PreviousQuestionAnswerPair qaPair = new PreviousQuestionAnswerPair(question, answer);
-            this.PreviousQuestionsAndAnswers.Add(qaPair);
-        }
-
-        /// <summary>
-        /// For debugging purpose. Saves messages and answers to files with timestamp.
-        /// </summary>
-        /// <param name="messages"></param>
-        /// <param name="choices"></param>
-        /// <param name="log"></param>
-        private void Log(List<ChatCompletionsMessage> messages, List<Choice> choices, bool log = false)
-        {
-            string timestamp = DateTime.Now.ToString("yyyy_MM_dd__hh_mm_ss");
-            string jsonResponseMessages = JsonConvert.SerializeObject(messages, formatting: Formatting.Indented);
-            string jsonResponseChoices = JsonConvert.SerializeObject(choices, formatting: Formatting.Indented);
-            File.WriteAllText($"messages_{timestamp}", jsonResponseMessages);
-            File.WriteAllText($"choices_{timestamp}", jsonResponseChoices);
-        }
-
-        public List<PreviousQuestionAnswerPair> GetMostRecentQuestionAnswerPairs(int count)
-        {
-            List<PreviousQuestionAnswerPair> previousQAs = this.PreviousQuestionsAndAnswers
-                .OrderByDescending(pair => pair.Timestamp)
-                .Take(count)
-                .OrderBy(pair => pair.Timestamp)
-                .ToList();
-
-            return previousQAs;
+            _previousQuestionsAndAnswers.Add(qaPair);
         }
         #endregion
 
-        #region ResponseSpecificFunctions
-        public ChatResponse GetFullChatResponse() => openAiChatCompletionResponse;
-
-        public int GetTotalTokens() => openAiChatCompletionResponse?.usage?.total_tokens ?? 0;
-
-        public int GetPromtTokens() => openAiChatCompletionResponse?.usage?.prompt_tokens ?? 0;
-
-        public int GetCompletionTokens() => openAiChatCompletionResponse?.usage?.completion_tokens ?? 0;
-        #endregion
     }
 }
