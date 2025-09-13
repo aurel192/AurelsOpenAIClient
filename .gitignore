@@ -229,3 +229,4 @@ AppPackages/
 /TEST_LIBRARIES_NET472/packages
 /PositionsDb.json
 /Projects/packages
+*.nupkg
