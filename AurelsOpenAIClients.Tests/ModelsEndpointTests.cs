@@ -9,7 +9,7 @@ namespace AurelsOpenAIClient.Tests
         public async Task GetModels_ValidApiKey_ReturnsExpectedJsonStructure()
         {
             // Arrange
-            string apiKey = LoadSettings.LoadApiKeyFromJson("ApiKey");
+            string apiKey = LoadSettings.ReadPropertyFromJson("ApiKey");
             Models models = new Models(apiKey);
 
             // Act

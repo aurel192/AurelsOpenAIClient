@@ -7,7 +7,7 @@ namespace AurelsOpenAIClient.Tests
         [Fact]
         public async Task SendChat_ValidRequest_ReturnsResponseContainingHello()
         {
-            string apiKey = LoadSettings.LoadApiKeyFromJson("ApiKey");
+            string apiKey = LoadSettings.ReadPropertyFromJson("ApiKey");
             ChatCompletion chatClient = new ChatCompletion(apiKey);
             chatClient.SetModel("gpt-4.1-nano");
 
@@ -22,7 +22,7 @@ namespace AurelsOpenAIClient.Tests
         [Fact]
         public async Task SendChat_ReversedRequest_ReturnsResponseContainingReversedString()
         {
-            string apiKey = LoadSettings.LoadApiKeyFromJson("ApiKey");
+            string apiKey = LoadSettings.ReadPropertyFromJson("ApiKey");
             ChatCompletion chatClient = new ChatCompletion(apiKey);
             chatClient.SetModel("gpt-4.1-nano");
             chatClient.SetSystemRole("Your response is characters backwards.");

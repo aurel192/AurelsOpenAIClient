@@ -1,0 +1,8 @@
+{
+  "OpenAISettings": {
+    "ApiKey": "YOUR_OPENAI_API_KEY",
+    "PreferedChatCompletionModel": "gpt-4o-mini",
+    "Temperature": "0.7",
+    "SystemRole": "You are a helpful assistant."
+  }
+}

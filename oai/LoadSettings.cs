@@ -1,32 +1,30 @@
-using System.Text.Json;
+﻿using System.Text.Json;
 
-namespace AurelsOpenAIClient.Tests
+namespace oai
 {
     public static class LoadSettings
     {
-        public static string ReadPropertyFromJson(string propertyName, string configFileName = "testsettings.json")
+        public static string? ReadPropertyFromJson(string propertyName, string configFileName = "settings.json")
         {
             string startDir = AppContext.BaseDirectory;
             string configPath = FindFileUp(startDir, configFileName);
 
             if (configPath == null)
             {
-                throw new FileNotFoundException(
-                    $"Configuration file '{configFileName}' not found. Place it in the test project folder or a parent folder!");
+                return null;
             }
 
             using var doc = JsonDocument.Parse(File.ReadAllText(configPath));
-            if (doc.RootElement.TryGetProperty("OpenAI", out var openAiSection) &&
-                openAiSection.TryGetProperty(propertyName, out var propertyValue) &&
+            if (doc.RootElement.TryGetProperty("OpenAISettings", out var openAISettings) &&
+                openAISettings.TryGetProperty(propertyName, out var propertyValue) &&
                 propertyValue.ValueKind == JsonValueKind.String)
             {
                 string? strValue = propertyValue.GetString();
                 if (string.IsNullOrWhiteSpace(strValue))
-                    throw new InvalidOperationException($"Configuration property '{propertyName}' in '{configFileName}' is empty.");
+                    return null;
                 return strValue;
             }
-
-            throw new InvalidOperationException($"Property '{propertyName}' not found in configuration file. Expected structure: {{ \"OpenAI\": {{ \"{propertyName}\": \"...\" }} }}");
+            return null;
         }
 
         private static string FindFileUp(string startDir, string fileName)
