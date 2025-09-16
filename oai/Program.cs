@@ -8,9 +8,9 @@ using oai;
 string question = null;
 string model = null;
 string apikey = null;
-float temperature = -1.0f;
 string systemrole = null;
 string errors = string.Empty;
+float temperature = -1.0f;
 
 for (int i = 0; i < args.Length; i++)
 {
@@ -44,8 +44,11 @@ for (int i = 0; i < args.Length; i++)
 // Useful for piping or redirection or longer text input from file, see examples below:
 // dotnet oai.dll < input.txt > out.txt
 // dotnet oai.dll input.txt > out.txt
-// dotnet oai.dll input.txt -s "Do The Opposite!" (input.txt content is "say hello", the answer will be "goodbye")
-// If no -q was provided, try to get the question from a single filename arg or from redirected stdin
+// dotnet oai.dll input.txt -s "Do The Opposite!
+// dotnet oai.dll input.txt -s "Do The Opposite! > out.txt
+// input.txt content is "say hello", the answer will be "goodbye"
+
+// If no -q arg was provided, try to get the question from a single filename arg or from redirected stdin
 if (string.IsNullOrEmpty(question))
 {
     if (File.Exists(args[0]))

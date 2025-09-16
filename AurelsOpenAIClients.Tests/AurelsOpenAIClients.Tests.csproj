@@ -17,7 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\Azure\Libraries\Projects\AurelsOpenAIClient\AurelsOpenAIClient.csproj" />
+    <ProjectReference Include="..\AurelsOpenAIClient\AurelsOpenAIClient.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -25,3 +25,4 @@
   </ItemGroup>
 
 </Project>
+

@@ -3,15 +3,15 @@
   <metadata>
 
     <id>AurelsOpenAIClient</id>
-    <version>1.1.1</version>
+    <version>1.1.3</version>
     <title>AurelsOpenAIClient</title>
     <authors>aurel192</authors>
     <owners>aurel192</owners>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
-    <description>AurelsOpenAIClient is a simple .NET library for integrating OpenAI APIs into your applications. It supports various functionalities such as Chat Completion, Speech-to-Text, Text-to-Speech, and Translation. All you need is an OpenAI API key.</description>
+    <description>AurelsOpenAIClient is a simple .NET library for integrating OpenAI APIs into your applications. It supports various functionalities such as Chat Completion, Speech-to-Text, Text-to-Speech, Translation, Image Generation. All you need is an OpenAI API key.</description>
     <releaseNotes></releaseNotes>
     <copyright>Copyright © 2025 Aurel Kovacs</copyright>
-    <tags>openai ai openai chatgpt chatcompletion translate speechrecognition texttospeech speechtotext voicegeneration languagemodel llm neuralnetwork deeplearning artificialintelligence ai aurel aurel192 kovacsaurel aurelkovacs</tags>
+    <tags>openai ai openai chatgpt chatcompletion translate speechrecognition texttospeech speechtotext voicegeneration imagegeneration image generation languagemodel llm neuralnetwork deeplearning artificialintelligence ai aurel aurel192 kovacsaurel aurelkovacs</tags>
     <readme>README.md</readme>
     <icon>AurelsOpenAIClient.png</icon>
 	<license type="file">LICENSE.txt</license>

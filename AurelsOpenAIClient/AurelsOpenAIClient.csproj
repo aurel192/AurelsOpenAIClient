@@ -2,9 +2,9 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <AssemblyVersion>1.1.1</AssemblyVersion>
-    <FileVersion>1.1.1</FileVersion>
-    <Version>1.1.1</Version>
+    <AssemblyVersion>1.1.3</AssemblyVersion>
+    <FileVersion>1.1.3</FileVersion>
+    <Version>1.1.3</Version>
     <Title>AurelsOpenAIClient</Title>
     <Authors>aurel192</Authors>
     <Company>aurel192</Company>
@@ -34,10 +34,6 @@
       <PackagePath></PackagePath>
     </None>
 
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="ModelList\" />
   </ItemGroup>
   
 </Project>
