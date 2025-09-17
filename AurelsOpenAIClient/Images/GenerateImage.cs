@@ -40,17 +40,23 @@ namespace AurelsOpenAIClient.Images
 
             try
             {
+                // Check filename
+                if (n == 1 && File.Exists(outputFileName))
+                {
+                    throw new ApplicationException($"File already exists: {outputFileName}. Use a different filename!!");
+                }
+
                 // Create request object
                 CreateImageRequest request = new CreateImageRequest(_model, prompt, size, n, output_format: "png", quality: "auto", output_compression: 100);
 
                 // Serialize request to JSON
                 string jsonRequest = JsonSerializer.Serialize(request);
                 StringContent content = new StringContent(jsonRequest, Encoding.UTF8, "application/json");
-
+                
                 // Send POST request
                 HttpResponseMessage response = await _httpClient.PostAsync(_endpoint, content);
                 response.EnsureSuccessStatusCode();
-
+                
                 // Parse response
                 string jsonResponse = await response.Content.ReadAsStringAsync();
 
@@ -60,7 +66,7 @@ namespace AurelsOpenAIClient.Images
                 };
 
                 CreateImageResponse imageResponse = JsonSerializer.Deserialize<CreateImageResponse>(jsonResponse, options);
-
+                
                 // Check if deserialization was successful
                 if (imageResponse == null || imageResponse.data == null || imageResponse.data.Length == 0)
                 {
@@ -69,17 +75,22 @@ namespace AurelsOpenAIClient.Images
 
                 // Save images and collect filenames
                 List<string> savedFiles = new List<string>();
-
+                
                 for (int i = 0; i < imageResponse.data.Length; i++)
                 {
-                    string fileName = imageResponse.data.Length == 1 ? outputFileName :
-                        Path.GetFileNameWithoutExtension(outputFileName) + $"_{i + 1}" + Path.GetExtension(outputFileName);
+                    string fullPath = string.Empty;
 
-                    string fullPath = Path.GetFullPath(fileName);
-
-                    if (File.Exists(fullPath))
+                    if (imageResponse.data.Length == 1)
                     {
-                        throw new ApplicationException($"File already exists: {fullPath}. Use a different filename!!");
+                        fullPath = outputFileName;
+                    }
+                    else
+                    {
+                        string directory = Path.GetDirectoryName(outputFileName);
+                        string fileName = Path.GetFileNameWithoutExtension(outputFileName);
+                        string extension = Path.GetExtension(fileName);
+                        fileName = fileName + $"_{i + 1}" + extension;
+                        fullPath = string.IsNullOrEmpty(directory) ? fileName : Path.Combine(directory, fileName);
                     }
 
                     // Check if base64 data is available
@@ -98,10 +109,10 @@ namespace AurelsOpenAIClient.Images
                     {
                         throw new ApplicationException($"No URL or base64 data found for image {i + 1}");
                     }
-
-                    savedFiles.Add(fileName);
+                    
+                    savedFiles.Add(fullPath);
                 }
-
+                
                 return savedFiles.ToArray();
             }
             catch (Exception ex)
