@@ -73,7 +73,7 @@ namespace AurelsOpenAIClient.Chat
             if (temperature < 0 || temperature > 2)
                 throw new ApplicationException("Temperature must be a value between 0.0 and 2.0");
 
-            temperature = temperature;
+            _temperature = temperature;
         }
         #endregion
 
