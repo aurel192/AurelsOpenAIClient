@@ -50,22 +50,22 @@ namespace AurelsOpenAIClient.Images
                 CreateImageRequest request = new CreateImageRequest(_model, prompt, size, n, output_format: "png", quality: "auto", output_compression: 100);
 
                 // Serialize request to JSON
-                string jsonRequest = JsonSerializer.Serialize(request);
-                StringContent content = new StringContent(jsonRequest, Encoding.UTF8, "application/json");
+                _jsonRequest = JsonSerializer.Serialize(request);
+                StringContent content = new StringContent(_jsonRequest, Encoding.UTF8, "application/json");
                 
                 // Send POST request
                 HttpResponseMessage response = await _httpClient.PostAsync(_endpoint, content);
                 response.EnsureSuccessStatusCode();
                 
                 // Parse response
-                string jsonResponse = await response.Content.ReadAsStringAsync();
+                _jsonResponse = await response.Content.ReadAsStringAsync();
 
                 JsonSerializerOptions options = new JsonSerializerOptions
                 {
                     PropertyNameCaseInsensitive = true
                 };
 
-                CreateImageResponse imageResponse = JsonSerializer.Deserialize<CreateImageResponse>(jsonResponse, options);
+                CreateImageResponse imageResponse = JsonSerializer.Deserialize<CreateImageResponse>(_jsonResponse, options);
                 
                 // Check if deserialization was successful
                 if (imageResponse == null || imageResponse.data == null || imageResponse.data.Length == 0)
@@ -88,9 +88,9 @@ namespace AurelsOpenAIClient.Images
                     {
                         string directory = Path.GetDirectoryName(outputFileName);
                         string fileName = Path.GetFileNameWithoutExtension(outputFileName);
-                        string extension = Path.GetExtension(fileName);
-                        fileName = fileName + $"_{i + 1}" + extension;
-                        fullPath = string.IsNullOrEmpty(directory) ? fileName : Path.Combine(directory, fileName);
+                        string extension = Path.GetExtension(outputFileName);
+                        fileName = fileName + $"_{i + 1}" ;
+                        fullPath = string.IsNullOrEmpty(directory) ? fileName : Path.Combine(directory, $"{fileName}{extension}");
                     }
 
                     // Check if base64 data is available

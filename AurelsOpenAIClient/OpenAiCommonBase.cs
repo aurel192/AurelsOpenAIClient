@@ -74,10 +74,17 @@ namespace AurelsOpenAIClient
         {
             if (string.IsNullOrEmpty(_jsonRequest))
                 return string.Empty;
-
-            using (JsonDocument doc = JsonDocument.Parse(_jsonRequest))
+            try
             {
-                return JsonSerializer.Serialize(doc.RootElement, new JsonSerializerOptions { WriteIndented = true });
+
+                using (JsonDocument doc = JsonDocument.Parse(_jsonRequest))
+                {
+                    return JsonSerializer.Serialize(doc.RootElement, new JsonSerializerOptions { WriteIndented = true });
+                }
+            }
+            catch 
+            {
+                return _jsonRequest;
             }
         }
 
@@ -86,9 +93,16 @@ namespace AurelsOpenAIClient
             if (string.IsNullOrEmpty(_jsonResponse))
                 return string.Empty;
 
-            using (JsonDocument doc = JsonDocument.Parse(_jsonResponse))
+            try
             {
-                return JsonSerializer.Serialize(doc.RootElement, new JsonSerializerOptions { WriteIndented = true });
+                using (JsonDocument doc = JsonDocument.Parse(_jsonResponse))
+                {
+                    return JsonSerializer.Serialize(doc.RootElement, new JsonSerializerOptions { WriteIndented = true });
+                }
+            }
+            catch
+            {
+                return _jsonResponse;
             }
         }
 
