@@ -18,7 +18,8 @@ AurelsOpenAIClient is a simple .NET library for integrating OpenAI APIs into you
 - **Speech-to-Text**: Convert audio files to text using OpenAI's `whisper-1` model.
 - **Text-to-Speech**: Generate speech from text with customizable voice and speed; uses `tts-1` by default.
 - **Translation**: Translate audio files into English using OpenAI's `whisper-1` model.
-- **Image Generation**: Generate images from text prompts using OpenAI's image generation models.
+- **Image Generation**: Generate images from text prompts using OpenAI's image generation models.  
+Note:`gpt-image-1` is the latest, it can generate photorealistic images.
 
 - **I am working on other useful endpoints.  
 If you're interested in this easy to use client check the [NuGet Package](https://www.nuget.org/packages/AurelsOpenAIClient)  or the [GitHub repository](https://github.com/aurel192/AurelsOpenAIClient) weekly**
@@ -135,9 +136,10 @@ string englishText = await Translate.GetResponse("RecordedForeignAudio.mp3");
 
 The `GenerateImage` class generates images from text prompts.  
 You can customize the model, size, and output file.
-You must be verified to use the model `gpt-image-1`.  
+You must be verified to use the model `gpt-image-1`.   
+
 Go to: https://platform.openai.com/settings/organization/general  
-Do the verification on your mobile phone or laptop because the it requires a camera.
+Do the verification on your mobile phone or laptop because it requires a camera.
 
 ```csharp
 var imageClient = new GenerateImage("YOUR-OPENAI-API-KEY");
@@ -160,7 +162,7 @@ string[] imageFilesPath = await imageClient.Generate(
     n: 3);
 ```  
 
-This will generate 3 images from the same prompt and save them as `SleepyCat_1.png`, `SleepyCat_2.png`, etc.
+The code above will generate 3 images from the same prompt and save them as `SleepyCat_1.png`, `SleepyCat_2.png`, etc.
  
 > See the generated images:  
 [Generated image (SleepyCat_1.png)](http://collectioninventory.com/ai/SleepyCat_1.png)  
