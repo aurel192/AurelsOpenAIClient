@@ -1,3 +1,5 @@
+
+
 ﻿# AurelsOpenAIClient
 
 **Version:** 1.1.6
@@ -143,7 +145,7 @@ Do the verification on your mobile phone or laptop because it requires a camera.
 
 ```csharp
 var imageClient = new GenerateImage("YOUR-OPENAI-API-KEY");
-createImageClient.SetModel("dall-e-3");
+imageClient.SetModel("dall-e-3");
 string[] imageFilesPath = await imageClient.Generate("two cute smiling gecko running towards you. forest in the background.", "GeneratedImage.png", "1024x1024", 1);
 ```
 You can also generate multiple images at once using the 'gpt-image-1' by specifying the `n` parameter:
