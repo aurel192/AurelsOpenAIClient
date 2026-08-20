@@ -10,4 +10,5 @@ namespace AurelsOpenAIClient.Images.Response
         public string size { get; set; }
         public Usage usage { get; set; }
     }
+
 }

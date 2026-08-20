@@ -36,15 +36,10 @@ namespace AurelsOpenAIClient.Images
         /// <returns>array of saved file names</returns>
         public async Task<string[]> Generate(string prompt, string outputFileName = "GeneratedImage.png", string size = "1024x1024", int n = 1)
         {
-            CheckParameters(prompt, n, size, outputFileName);
-
             try
             {
-                // Check filename
-                if (n == 1 && File.Exists(outputFileName))
-                {
-                    throw new ApplicationException($"File already exists: {outputFileName}. Use a different filename!!");
-                }
+                CheckParameters(prompt, n, size, outputFileName);
+                CheckFilenames(outputFileName, n);
 
                 // Create request object
                 CreateImageRequest request = new CreateImageRequest(_model, prompt, size, n, output_format: "png", quality: "auto", output_compression: 100);
@@ -52,11 +47,11 @@ namespace AurelsOpenAIClient.Images
                 // Serialize request to JSON
                 _jsonRequest = JsonSerializer.Serialize(request);
                 StringContent content = new StringContent(_jsonRequest, Encoding.UTF8, "application/json");
-                
+
                 // Send POST request
                 HttpResponseMessage response = await _httpClient.PostAsync(_endpoint, content);
                 response.EnsureSuccessStatusCode();
-                
+
                 // Parse response
                 _jsonResponse = await response.Content.ReadAsStringAsync();
 
@@ -66,7 +61,7 @@ namespace AurelsOpenAIClient.Images
                 };
 
                 CreateImageResponse imageResponse = JsonSerializer.Deserialize<CreateImageResponse>(_jsonResponse, options);
-                
+
                 // Check if deserialization was successful
                 if (imageResponse == null || imageResponse.data == null || imageResponse.data.Length == 0)
                 {
@@ -75,7 +70,7 @@ namespace AurelsOpenAIClient.Images
 
                 // Save images and collect filenames
                 List<string> savedFiles = new List<string>();
-                
+
                 for (int i = 0; i < imageResponse.data.Length; i++)
                 {
                     string fullPath = string.Empty;
@@ -89,7 +84,7 @@ namespace AurelsOpenAIClient.Images
                         string directory = Path.GetDirectoryName(outputFileName);
                         string fileName = Path.GetFileNameWithoutExtension(outputFileName);
                         string extension = Path.GetExtension(outputFileName);
-                        fileName = fileName + $"_{i + 1}" ;
+                        fileName = fileName + $"_{i + 1}";
                         fullPath = string.IsNullOrEmpty(directory) ? fileName : Path.Combine(directory, $"{fileName}{extension}");
                     }
 
@@ -109,15 +104,50 @@ namespace AurelsOpenAIClient.Images
                     {
                         throw new ApplicationException($"No URL or base64 data found for image {i + 1}");
                     }
-                    
+
                     savedFiles.Add(fullPath);
                 }
-                
+
                 return savedFiles.ToArray();
             }
             catch (Exception ex)
             {
                 throw ex;
+            }
+        }
+
+        private static void CheckFilenames(string outputFileName, int n)
+        {
+            // Check filename(s) existence.
+            if (n == 1)
+            {
+                if (File.Exists(outputFileName))
+                {
+                    throw new ApplicationException($"File already exists: {outputFileName}. Use a different filename!!");
+                }
+            }
+            else
+            {
+                string directory = Path.GetDirectoryName(outputFileName);
+                string baseName = Path.GetFileNameWithoutExtension(outputFileName);
+                string extension = Path.GetExtension(outputFileName);
+
+                List<string> existingFiles = new List<string>();
+                for (int i = 1; i <= n; i++)
+                {
+                    string candidateName = $"{baseName}_{i}{extension}";
+                    string candidateFullPath = string.IsNullOrEmpty(directory) ? candidateName : Path.Combine(directory, candidateName);
+                    if (File.Exists(candidateFullPath))
+                    {
+                        existingFiles.Add(candidateFullPath);
+                    }
+                }
+
+                if (existingFiles.Count > 0)
+                {
+                    string existsList = string.Join(", ", existingFiles);
+                    throw new ApplicationException($"File(s) already exist: {existsList}. Use different filename(s)!!");
+                }
             }
         }
 

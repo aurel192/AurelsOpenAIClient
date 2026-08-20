@@ -92,7 +92,7 @@ Use these functions if you would like to know more additional information of the
 ```csharp
 ChatResponse chatResponse = chatClient.GetFullChatResponse();
 int tokensTotal = chatClient.GetTotalTokens();
-int tokensPromt = chatClient.GetPromtTokens();
+int tokensPrompt = chatClient.GetPromptTokens();
 int tokensCompletion = chatClient.GetCompletionTokens();
 string jsonRequest = chatClient.GetJsonRequest();
 string jsonResponse = chatClient.GetJsonResponse();

@@ -257,7 +257,7 @@ namespace AurelsOpenAIClient.Chat
 
         public int GetTotalTokens() => _openAiChatCompletionResponse?.usage?.total_tokens ?? 0;
 
-        public int GetPromtTokens() => _openAiChatCompletionResponse?.usage?.prompt_tokens ?? 0;
+        public int GetPromptTokens() => _openAiChatCompletionResponse?.usage?.prompt_tokens ?? 0;
 
         public int GetCompletionTokens() => _openAiChatCompletionResponse?.usage?.completion_tokens ?? 0;
 

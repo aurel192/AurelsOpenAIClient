@@ -35,11 +35,11 @@ namespace AurelsOpenAIClient.Chat
         /// <param name="filePath">The path to the audio file to be transcribed</param>
         /// <param name="language">Optinal. The language of the input audio. Supplying the input language in ISO-639-1 format (e.g. "en", "de", "es", "hu") will improve accuracy and latency.</param>
         /// <param name="response_format">Optional. Defaults is json. The format of the output, in one of these options: json, text, srt, verbose_json, or vtt.For gpt-4o-transcribe and gpt-4o-mini-transcribe, the only supported format is json</param>
-        /// <param name="promt">Optional. The prompt can be used to provide context to the model about the audio content. It can be useful for improving accuracy in specific scenarios, such as when there is background noise or when the audio contains specialized terminology.</param>
+        /// <param name="prompt">Optional. The prompt can be used to provide context to the model about the audio content. It can be useful for improving accuracy in specific scenarios, such as when there is background noise or when the audio contains specialized terminology.</param>
         /// <param name="chunking_strategy">Optional when set to auto, the server first normalizes loudness and then uses voice activity detection (VAD) to choose boundaries. If unset, the audio is transcribed as a single block. Thus if you want to stream audio transcription chunks, you have to set it to auto when setting stream = True.</param>
         /// <returns>transcribed string</returns>
         /// <exception cref="ApplicationException"></exception>
-        public async Task<string> Transcribe(string filePath, string language = null, string response_format = null, string promt = null, object chunking_strategy = null)
+        public async Task<string> Transcribe(string filePath, string language = null, string response_format = null, string prompt = null, object chunking_strategy = null)
         {
             if (string.IsNullOrEmpty(filePath))
                 throw new ApplicationException("filePath is not set.");
@@ -106,8 +106,8 @@ namespace AurelsOpenAIClient.Chat
                     formData.Add(new StringContent(response_format), "response_format");
 
                 // Optionally: if you know the language, you can set it: "en", "es", etc...
-                if (!string.IsNullOrEmpty(promt))
-                    formData.Add(new StringContent(promt), "promt");
+                if (!string.IsNullOrEmpty(prompt))
+                    formData.Add(new StringContent(prompt), "prompt");
 
                 DateTime start = DateTime.Now;
 

@@ -74,9 +74,9 @@ namespace AurelsOpenAIClient
         {
             if (string.IsNullOrEmpty(_jsonRequest))
                 return string.Empty;
+
             try
             {
-
                 using (JsonDocument doc = JsonDocument.Parse(_jsonRequest))
                 {
                     return JsonSerializer.Serialize(doc.RootElement, new JsonSerializerOptions { WriteIndented = true });
