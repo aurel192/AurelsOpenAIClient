@@ -18,12 +18,6 @@ namespace AurelsOpenAIClient.Tests
             // Assert basic string validity
             Assert.False(string.IsNullOrWhiteSpace(availableModels));
 
-            // Parse JSON and validate structure matches the sample:
-            // {
-            //   "object": "list",
-            //   "data": [ { "id": "...", "object": "model", "created": 123, "owned_by": "..." }, ... ]
-            // }
-
             // NOTE: Schema may evolve, and properties may be added or renamed!
             using JsonDocument doc = JsonDocument.Parse(availableModels);
             JsonElement root = doc.RootElement;
