@@ -1,6 +1,6 @@
 ﻿# AurelsOpenAIClient
 
-**Version:** 1.1.6
+**Version:** 1.1.7
 
 AurelsOpenAIClient is a simple .NET library for integrating OpenAI APIs into your applications. It supports Chat Completion, Speech-to-Text, Text-to-Speech, Translation, and Image Generation. You only need a valid OpenAI API key to use it.
 
@@ -34,7 +34,7 @@ If you're interested in this easy to use client check the [NuGet Package](https:
 Add AurelsOpenAIClient to your project via CLI or the NuGet Package Manager:
 
 ```
-dotnet add package AurelsOpenAIClient --version 1.1.6
+dotnet add package AurelsOpenAIClient --version 1.1.7
 ```
 
 Make sure you have a valid OpenAI API key. You can top up your OpenAI credit with as little as 5 USD:
@@ -92,7 +92,7 @@ Use these functions if you would like to know more additional information of the
 ```csharp
 ChatResponse chatResponse = chatClient.GetFullChatResponse();
 int tokensTotal = chatClient.GetTotalTokens();
-int tokensPromt = chatClient.GetPromtTokens();
+int tokensPrompt = chatClient.GetPromptTokens();
 int tokensCompletion = chatClient.GetCompletionTokens();
 string jsonRequest = chatClient.GetJsonRequest();
 string jsonResponse = chatClient.GetJsonResponse();
@@ -193,7 +193,7 @@ dotnet oai.dll input.txt -s "Do the opposite!"
 [GitHub - AurelsOpenAIClient - CLI App](https://github.com/aurel192/AurelsOpenAIClient/tree/main/oai)
 
 ---
-## Useful Link on OpenAI
+## Useful Links on OpenAI
 https://platform.openai.com/settings/organization/billing/overview  
 https://platform.openai.com/settings/organization/limits  
 https://platform.openai.com/settings/organization/usage
